@@ -24,7 +24,7 @@ desc: |
 version: v1.1.0
 author: zexuan.peng
 repo: https://github.com/demo-zexuan/astrbot-tts-tool
-astrbot_version: ">=4.9.2"
+astrbot_version: ">=4.10.4"
 support_platforms:
   - aiocqhttp
   - telegram

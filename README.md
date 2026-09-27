@@ -2,7 +2,7 @@
 
 > 唤醒词触发的 AstrBot 语音合成插件：说一句「小助手 你好呀」，机器人先用大模型把这句话改写成自然的朗读台词，再用 Qwen-TTS 合成语音发到当前会话。
 
-[![AstrBot](https://img.shields.io/badge/AstrBot-%3E%3D4.9.2-5B5BD6)](https://astrbot.app)
+[![AstrBot](https://img.shields.io/badge/AstrBot-%3E%3D4.10.4-5B5BD6)](https://astrbot.app)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-323%20offline%20%2B%205%20live-brightgreen)](#开发与测试)

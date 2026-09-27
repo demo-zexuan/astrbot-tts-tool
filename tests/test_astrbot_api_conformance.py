@@ -338,6 +338,32 @@ class TestMetadataConformance:
         current = tuple(int(part) for part in version.split(".")[:3])
         assert current >= minimum, f"AstrBot {version} does not satisfy {spec}"
 
+    def test_version_floor_covers_the_schema_features_used(self) -> None:
+        """A schema type that is newer than the declared floor breaks loading.
+
+        AstrBot raises ``TypeError`` while building the plugin config for an
+        unsupported schema type, so the plugin would fail to load on versions
+        below the one that introduced the type.
+        """
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        uses_template_list = any(
+            isinstance(value, dict) and value.get("type") == "template_list"
+            for value in schema.values()
+        )
+        if not uses_template_list:
+            pytest.skip("no template_list schema in use")
+
+        # Documented introduction version of template_list.
+        required = (4, 10, 4)
+        spec = self.metadata().get("astrbot_version", "").strip('"')
+        match = re.match(r">=\s*(\d+)\.(\d+)\.(\d+)", spec)
+        assert match, f"cannot read a minimum version from {spec!r}"
+        declared = tuple(int(part) for part in match.groups())
+        assert declared >= required, (
+            f"schema uses template_list (introduced in "
+            f"{'.'.join(map(str, required))}) but astrbot_version is {spec}"
+        )
+
     def test_support_platforms_are_known_adapter_names(self) -> None:
         text = METADATA_PATH.read_text(encoding="utf-8")
         block = re.search(

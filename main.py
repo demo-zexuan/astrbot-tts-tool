@@ -305,9 +305,9 @@ class WakeWordTtsPlugin(Star):
                 self._data_dir / "audio",
                 ttl_hours=settings.cache_ttl_hours,
                 max_files=settings.max_cache_files,
-                logger=self.logger,
+                logger=logger,
             ),
-            logger=self.logger,
+            logger=logger,
         )
 
     # ------------------------------------------------------------ lifecycle ---
@@ -397,7 +397,7 @@ class WakeWordTtsPlugin(Star):
                 plugin=self,
                 provider_id=settings.llm_provider_id,
                 model=settings.llm_model,
-                logger=self.logger,
+                logger=logger,
             )
         else:
             try:
@@ -417,7 +417,7 @@ class WakeWordTtsPlugin(Star):
                 max_retries=settings.llm_max_retries,
                 temperature=settings.llm_temperature,
                 max_tokens=settings.llm_max_tokens,
-                logger=self.logger,
+                logger=logger,
             )
 
         self._llm_fingerprint = fingerprint
