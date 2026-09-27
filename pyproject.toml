@@ -1,0 +1,31 @@
+# Development-only tooling configuration.
+#
+# This file intentionally has no [project] or [build-system] table: the plugin is
+# not a distributable Python package, it is loaded by AstrBot from its directory.
+# Only linters and the test runner read this file.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+  # Chinese punctuation and emoji are intentional in user-facing strings.
+  "RUF001",
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501", "SIM117"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q --strict-markers"

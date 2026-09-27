@@ -1,0 +1,6 @@
+# Runtime dependencies of astrbot_plugin_tts_wakeword.
+#
+# aiohttp is the only third-party import used by this plugin. AstrBot already
+# depends on it, so installation is normally a no-op; it is pinned here so the
+# plugin also works on a trimmed deployment.
+aiohttp>=3.9.0

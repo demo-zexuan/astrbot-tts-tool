@@ -1,0 +1,37 @@
+name: astrbot_plugin_tts_wakeword
+display_name: 唤醒词 TTS 语音合成
+short_desc: 说唤醒词即可让机器人用 Qwen-TTS 合成语音并发送到当前会话。
+desc: |
+  通过唤醒词触发的语音合成插件。消息以「小助手」等唤醒词开头时，插件会调用
+  阿里云百炼（DashScope）的 Qwen-TTS 模型生成音频，并作为语音消息发送到当前会话。
+
+  功能特性：
+  - LLM 预处理（文本导演）：先由大模型把消息改写成更自然的朗读台词，
+    支持 free-style 指令遵循、细粒度标签控制与会话上下文感知
+  - 多唤醒词，可为每个唤醒词绑定专属模型/音色/语气
+  - 同时提供 /tts、/tts_voice、/tts_llm、/tts_status、/tts_help 指令
+  - 模型、音色、语种、地域、超时、重试、并发等全部可配置
+  - 自动清理 Markdown、链接、Emoji，长文本按句子自动分段
+  - 音频缓存按时间与数量自动回收，出错有可读的中文提示
+
+  LLM 可直接复用 AstrBot 里已配置的 Provider（自动继承 api_base、API Key 与
+  custom_headers，Opencode 等需要特殊请求头的网关开箱即用），也支持插件内直连
+  OpenAI 兼容接口并自定义请求头。
+
+  默认 TTS 模型为 qwen3-tts-flash（HTTP 非实时接口已验证可用）。
+  注意：qwen-audio-3.1-tts-flash 等 Qwen-Audio-TTS 系列目前只提供实时
+  （WebSocket）接口，无法通过本插件的 HTTP 通道调用。
+version: v1.1.0
+author: zexuan.peng
+repo: https://github.com/demo-zexuan/astrbot-tts-tool
+astrbot_version: ">=4.9.2"
+support_platforms:
+  - aiocqhttp
+  - telegram
+  - wecom
+tags:
+  - tts
+  - voice
+  - qwen
+  - wakeword
+social_link: https://github.com/demo-zexuan

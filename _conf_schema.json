@@ -1,0 +1,542 @@
+{
+  "enabled": {
+    "description": "启用插件",
+    "type": "bool",
+    "default": true,
+    "hint": "总开关。关闭后唤醒词与指令都不会触发语音合成。"
+  },
+  "wake_words": {
+    "description": "唤醒词列表",
+    "type": "list",
+    "default": [
+      "小助手"
+    ],
+    "hint": "消息以其中任意一个开头时触发语音合成，例如「小助手 今天天气不错」。可以配置多个。",
+    "obvious_hint": true
+  },
+  "wake_require_separator": {
+    "description": "唤醒词后必须跟分隔符",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后必须写成「小助手 你好」或「小助手，你好」，可避免「小助手们」这类误触发；关闭则「小助手你好」也能触发。"
+  },
+  "wake_case_sensitive": {
+    "description": "唤醒词区分大小写",
+    "type": "bool",
+    "default": false,
+    "hint": "仅对英文唤醒词有意义。关闭时不区分大小写。"
+  },
+  "strip_wake_word": {
+    "description": "合成时去掉唤醒词",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后只朗读唤醒词后面的内容；关闭则连唤醒词一起朗读。"
+  },
+  "enable_command": {
+    "description": "启用 /tts 指令",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后只能通过唤醒词触发，/tts 等指令会提示已关闭。"
+  },
+  "ignore_slash_commands": {
+    "description": "忽略带唤醒前缀的指令消息",
+    "type": "bool",
+    "default": true,
+    "hint": "建议保持开启。开启后 /help 这类 AstrBot 指令不会被唤醒词监听器重复处理。"
+  },
+  "stop_event_on_wake": {
+    "description": "触发后阻止该消息继续走 LLM",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后机器人只回语音，不再额外回复文字，避免重复响应。"
+  },
+  "echo_source_text": {
+    "description": "同时发送文本内容",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后会先把合成用的文本发一条消息，再发语音。"
+  },
+  "cooldown_seconds": {
+    "description": "同一会话触发冷却（秒）",
+    "type": "int",
+    "default": 0,
+    "hint": "0 表示不限制。设置后可防止刷屏与额度浪费。",
+    "slider": {
+      "min": 0,
+      "max": 120,
+      "step": 1
+    }
+  },
+  "max_concurrent": {
+    "description": "最大并发合成数",
+    "type": "int",
+    "default": 3,
+    "hint": "同时进行的语音合成请求上限，防止触发上游限流。",
+    "slider": {
+      "min": 1,
+      "max": 10,
+      "step": 1
+    }
+  },
+  "reply_on_error": {
+    "description": "出错时回复提示",
+    "type": "bool",
+    "default": true,
+    "hint": "合成失败时在会话里回复一条可读的错误原因。"
+  },
+  "allow_session_voice_override": {
+    "description": "允许按会话切换音色",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后可用户使用 /tts_voice 音色名 在本会话内覆盖默认音色。"
+  },
+  "admin_only_voice_switch": {
+    "description": "仅管理员可切换音色",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后只有 AstrBot 管理员可以使用 /tts_voice 修改音色。"
+  },
+  "region": {
+    "description": "接口地域",
+    "type": "string",
+    "default": "beijing",
+    "options": [
+      "beijing",
+      "singapore",
+      "qwenai",
+      "custom"
+    ],
+    "labels": [
+      "百炼·北京（中国大陆）",
+      "百炼·新加坡（国际）",
+      "千问AI平台",
+      "自定义地址"
+    ],
+    "hint": "百炼北京与新加坡的 API Key 不通用；千问AI平台需要单独的 API Key。选择 custom 时以下方自定义地址为准。"
+  },
+  "base_url": {
+    "description": "自定义 API 地址",
+    "type": "string",
+    "default": "",
+    "hint": "留空则按地域自动选择。可填 https://dashscope.aliyuncs.com 或完整地址，插件会自动补全 /api/v1。"
+  },
+  "api_key": {
+    "description": "DashScope API Key",
+    "type": "string",
+    "default": "",
+    "secret": true,
+    "obvious_hint": true,
+    "hint": "阿里云百炼（Model Studio）API Key，获取地址 https://bailian.console.aliyun.com/?tab=model#/api-key"
+  },
+  "model": {
+    "description": "TTS 模型名称",
+    "type": "string",
+    "default": "qwen3-tts-flash",
+    "hint": "HTTP 非实时接口已验证可用：qwen3-tts-flash（默认）、qwen3-tts-instruct-flash（支持 instructions 指令控制）、qwen-tts、qwen-tts-latest。注意 qwen-audio-3.1-tts-flash 等 Qwen-Audio-TTS 系列只提供实时(WebSocket)接口，本插件无法调用。也可填写自建网关支持的其它模型名。",
+    "obvious_hint": true
+  },
+  "voice": {
+    "description": "音色（voice）",
+    "type": "string",
+    "default": "Cherry",
+    "hint": "系统音色名，例如 Cherry、Serena、Ethan、Chelsie、Dylan。完整列表见百炼文档「支持的音色」。",
+    "obvious_hint": true
+  },
+  "language_type": {
+    "description": "合成语种",
+    "type": "string",
+    "default": "Auto",
+    "options": [
+      "Auto",
+      "Chinese",
+      "English",
+      "German",
+      "Italian",
+      "Portuguese",
+      "Spanish",
+      "Japanese",
+      "Korean",
+      "French",
+      "Russian"
+    ],
+    "labels": [
+      "自动识别（Auto）",
+      "中文（Chinese）",
+      "英文（English）",
+      "德语（German）",
+      "意大利语（Italian）",
+      "葡萄牙语（Portuguese）",
+      "西班牙语（Spanish）",
+      "日语（Japanese）",
+      "韩语（Korean）",
+      "法语（French）",
+      "俄语（Russian）"
+    ],
+    "hint": "单一语种文本建议明确指定，合成质量通常优于 Auto。"
+  },
+  "instructions": {
+    "description": "语气指令（仅 instruct 系列模型）",
+    "type": "text",
+    "default": "",
+    "hint": "用自然语言描述期望的语气，例如「语速稍快，语气轻松活泼」。非 instruct 模型会忽略该配置。"
+  },
+  "optimize_instructions": {
+    "description": "自动优化语气指令",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后由模型对 instructions 做语义增强，仅在填写了 instructions 且使用 instruct 模型时生效。"
+  },
+  "timeout_seconds": {
+    "description": "单次请求超时（秒）",
+    "type": "int",
+    "default": 60,
+    "hint": "合成一次音频的最长等待时间。",
+    "slider": {
+      "min": 5,
+      "max": 300,
+      "step": 5
+    }
+  },
+  "max_retries": {
+    "description": "失败重试次数",
+    "type": "int",
+    "default": 2,
+    "hint": "仅在网络错误、超时以及 429/5xx 时重试。",
+    "slider": {
+      "min": 0,
+      "max": 5,
+      "step": 1
+    }
+  },
+  "max_chars": {
+    "description": "单段最大字符数",
+    "type": "int",
+    "default": 300,
+    "hint": "Qwen-TTS 单次请求有长度上限，超出会按句子自动切分成多段语音。",
+    "slider": {
+      "min": 20,
+      "max": 1000,
+      "step": 10
+    }
+  },
+  "split_long_text": {
+    "description": "长文本自动分段",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后按句子边界切分成多条语音依次发送；关闭则直接截断到最大字符数。"
+  },
+  "max_segments": {
+    "description": "最多合成段数",
+    "type": "int",
+    "default": 3,
+    "hint": "一条消息最多合成几段语音，超出部分会被丢弃，避免一次刷屏。",
+    "slider": {
+      "min": 1,
+      "max": 10,
+      "step": 1
+    }
+  },
+  "clean_markdown": {
+    "description": "清理 Markdown 标记",
+    "type": "bool",
+    "default": true,
+    "hint": "去掉 **、`、#、列表符号等，避免被读出来。"
+  },
+  "clean_url": {
+    "description": "移除链接",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后会删掉文本里的网址，避免 TTS 逐字符朗读链接。"
+  },
+  "clean_emoji": {
+    "description": "移除 Emoji",
+    "type": "bool",
+    "default": false,
+    "hint": "开启后会删除 Emoji 与特殊符号。"
+  },
+  "cache_ttl_hours": {
+    "description": "音频缓存保留时长（小时）",
+    "type": "float",
+    "default": 6.0,
+    "hint": "超过该时长的缓存音频会被后台任务清理。设为 0 表示不按时间清理。",
+    "slider": {
+      "min": 0,
+      "max": 168,
+      "step": 1
+    }
+  },
+  "max_cache_files": {
+    "description": "缓存文件数量上限",
+    "type": "int",
+    "default": 200,
+    "hint": "超过上限时按修改时间删除最旧的文件。",
+    "slider": {
+      "min": 10,
+      "max": 2000,
+      "step": 10
+    }
+  },
+  "llm_enable": {
+    "description": "启用 LLM 预处理（文本导演）",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后，每次触发都会先调用一次大模型，把消息改写成更自然的朗读台词并（可选）给出语气指令。会增加 0.5~2 秒延迟与少量 token 消耗。",
+    "obvious_hint": true
+  },
+  "llm_mode": {
+    "description": "LLM 接入方式",
+    "type": "string",
+    "default": "astrbot_provider",
+    "options": [
+      "astrbot_provider",
+      "direct"
+    ],
+    "labels": [
+      "复用 AstrBot 的 Provider（推荐）",
+      "插件内直连 OpenAI 兼容接口"
+    ],
+    "hint": "推荐复用 AstrBot Provider：api_base、API Key、自定义请求头（custom_headers）全部由 AstrBot 管理，Opencode 等需要特殊请求头的网关只要在 AstrBot 里配好即可直接调用。"
+  },
+  "llm_provider_id": {
+    "description": "选择 Provider",
+    "type": "string",
+    "default": "",
+    "_special": "select_provider",
+    "hint": "复用方式下使用的对话模型 Provider。留空则使用当前会话默认的对话模型。"
+  },
+  "llm_model": {
+    "description": "LLM 模型名称",
+    "type": "string",
+    "default": "",
+    "hint": "留空表示使用 Provider 自己的模型。DeepSeek 系列可填 deepseek-chat / deepseek-reasoner / deepseek-v4-flash / deepseek-v4-pro；Opencode 等其它网关填写其模型 ID，例如 opencode/… 或服务商文档给出的名称。"
+  },
+  "llm_base_url": {
+    "description": "LLM Base URL（仅直连方式）",
+    "type": "string",
+    "default": "https://api.deepseek.com/v1",
+    "hint": "OpenAI 兼容接口地址，插件会自动补 /chat/completions。可填 https://host、https://host/v1 或完整地址。"
+  },
+  "llm_api_key": {
+    "description": "LLM API Key（仅直连方式）",
+    "type": "string",
+    "default": "",
+    "secret": true,
+    "hint": "直连方式使用。复用 AstrBot Provider 时无需填写。"
+  },
+  "llm_auth_style": {
+    "description": "鉴权方式（仅直连方式）",
+    "type": "string",
+    "default": "bearer",
+    "options": [
+      "bearer",
+      "x-api-key",
+      "none"
+    ],
+    "labels": [
+      "Authorization: Bearer",
+      "x-api-key（Anthropic/部分网关）",
+      "不加鉴权头（网关自行处理）"
+    ],
+    "hint": "决定 API Key 放在哪个请求头。若网关要求其它写法，选 none 后用「自定义请求头」补齐。"
+  },
+  "llm_extra_headers": {
+    "description": "自定义请求头（仅直连方式）",
+    "type": "text",
+    "default": "",
+    "hint": "每行一个「名称: 值」，也支持 JSON。用于 Opencode 等需要额外请求头的网关，例如 anthropic-version: 2023-06-01。这里填写的同名 Header 会覆盖自动生成的鉴权头。"
+  },
+  "llm_timeout_seconds": {
+    "description": "LLM 超时（秒）",
+    "type": "int",
+    "default": 20,
+    "slider": {
+      "min": 3,
+      "max": 120,
+      "step": 1
+    },
+    "hint": "超过该时间视为失败；开启「失败兜底」时会改用原文直接合成。"
+  },
+  "llm_max_retries": {
+    "description": "LLM 重试次数",
+    "type": "int",
+    "default": 1,
+    "slider": {
+      "min": 0,
+      "max": 5,
+      "step": 1
+    },
+    "hint": "仅在网络错误、超时、429/5xx 时重试。"
+  },
+  "llm_temperature": {
+    "description": "LLM 温度",
+    "type": "float",
+    "default": 0.3,
+    "slider": {
+      "min": 0,
+      "max": 1.5,
+      "step": 0.1
+    },
+    "hint": "越低越稳定。文本改写建议 0.2~0.5。仅直连方式会透传该参数。"
+  },
+  "llm_max_tokens": {
+    "description": "LLM 最大输出 Token",
+    "type": "int",
+    "default": 800,
+    "slider": {
+      "min": 64,
+      "max": 4000,
+      "step": 64
+    },
+    "hint": "限制改写长度，避免费用失控。"
+  },
+  "llm_context_messages": {
+    "description": "上下文件数",
+    "type": "int",
+    "default": 6,
+    "slider": {
+      "min": 0,
+      "max": 30,
+      "step": 1
+    },
+    "hint": "取当前会话最近几条消息作为上下文，让语气贴合对话氛围。0 表示不使用上下文。"
+  },
+  "llm_rewrite": {
+    "description": "允许改写正文",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后只产出语气指令与标签，原文一字不改。"
+  },
+  "llm_apply_instructions": {
+    "description": "使用 LLM 产出的语气指令",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后，LLM 给出的 instructions 会覆盖上方配置的固定语气指令。仅在 instruct 系列模型上生效。"
+  },
+  "llm_max_input_chars": {
+    "description": "送给 LLM 的最大字符数",
+    "type": "int",
+    "default": 1200,
+    "slider": {
+      "min": 50,
+      "max": 8000,
+      "step": 50
+    },
+    "hint": "超过部分会被截断后再交给大模型，防止超长消息拉高成本。"
+  },
+  "llm_fail_open": {
+    "description": "LLM 失败时兜底",
+    "type": "bool",
+    "default": true,
+    "hint": "开启时，LLM 报错或超时会直接拿原文合成语音；关闭时则直接回复错误。"
+  },
+  "llm_system_prompt": {
+    "description": "自定义系统提示词",
+    "type": "text",
+    "default": "",
+    "hint": "留空使用内置提示词。内置提示词要求模型只输出 JSON（text / instructions / tags / reason），并保证不改变原意。"
+  },
+  "llm_tag_style": {
+    "description": "细粒度标签类型",
+    "type": "string",
+    "default": "none",
+    "options": [
+      "none",
+      "qwen-audio",
+      "ssml",
+      "custom"
+    ],
+    "labels": [
+      "不使用标签（默认，适配 qwen3-tts-flash）",
+      "Qwen-Audio-TTS / CosyVoice 标签",
+      "SSML 标签",
+      "自定义（见下）"
+    ],
+    "hint": "重要：qwen3-tts-flash 等模型不支持行内标签，此时必须保持 none，否则标签会被逐字朗读。使用支持标签的模型时才能开启。",
+    "obvious_hint": true
+  },
+  "llm_custom_tags": {
+    "description": "自定义标签说明",
+    "type": "text",
+    "default": "",
+    "hint": "当标签类型选 custom 时，这段文字会原样放进提示词里，告诉模型允许使用哪些标签。"
+  },
+  "wake_profiles": {
+    "description": "唤醒词专属配置",
+    "type": "template_list",
+    "default": [],
+    "hint": "为不同唤醒词绑定不同的模型 / 音色 / 语气。未填写的字段沿用上面的全局配置；会话内用 /tts_voice 设置的音色优先级最高。",
+    "templates": {
+      "profile": {
+        "name": "唤醒词专属音色",
+        "hint": "为指定唤醒词绑定专属的模型与音色",
+        "display_item": "wake_word",
+        "items": {
+          "wake_word": {
+            "description": "唤醒词",
+            "type": "string",
+            "default": "",
+            "hint": "与全局唤醒词一样匹配消息开头，例如 小美"
+          },
+          "model": {
+            "description": "模型名称（可选）",
+            "type": "string",
+            "default": "",
+            "hint": "留空则使用全局 model"
+          },
+          "voice": {
+            "description": "音色（可选）",
+            "type": "string",
+            "default": "",
+            "hint": "留空则使用全局 voice"
+          },
+          "language_type": {
+            "description": "语种（可选）",
+            "type": "string",
+            "default": "inherit",
+            "options": [
+              "inherit",
+              "Auto",
+              "Chinese",
+              "English",
+              "German",
+              "Italian",
+              "Portuguese",
+              "Spanish",
+              "Japanese",
+              "Korean",
+              "French",
+              "Russian"
+            ],
+            "labels": [
+              "沿用全局配置",
+              "自动识别（Auto）",
+              "中文（Chinese）",
+              "英文（English）",
+              "德语（German）",
+              "意大利语（Italian）",
+              "葡萄牙语（Portuguese）",
+              "西班牙语（Spanish）",
+              "日语（Japanese）",
+              "韩语（Korean）",
+              "法语（French）",
+              "俄语（Russian）"
+            ],
+            "hint": "选择「沿用全局配置」时使用上面的全局 language_type"
+          },
+          "instructions": {
+            "description": "语气指令（可选）",
+            "type": "text",
+            "default": "",
+            "hint": "仅 instruct 系列模型支持"
+          },
+          "optimize_instructions": {
+            "description": "自动优化语气指令",
+            "type": "bool",
+            "default": false,
+            "hint": "仅在填写了 instructions 且使用 instruct 模型时生效"
+          }
+        }
+      }
+    }
+  }
+}
