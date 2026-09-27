@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint & offline tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # AstrBot itself requires Python >= 3.12.
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio aiohttp ruff
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      # The live API tests skip themselves unless DASHSCOPE_API_KEY is set, so
+      # this job stays offline and deterministic.
+      - name: Offline test suite
+        run: pytest -q
+
+  astrbot-integration:
+    name: Load plugin with real AstrBot ${{ matrix.astrbot }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pinned so the integration check is reproducible. Bump deliberately.
+        astrbot: ["v4.27.4"]
+    env:
+      # AstrBot's import has side effects (global config, SQLite DB, log
+      # manager); point them at a throwaway directory inside the runner.
+      ASTRBOT_ROOT: ${{ github.workspace }}/.astrbot-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio aiohttp
+
+      - name: Install AstrBot ${{ matrix.astrbot }}
+        run: |
+          pip install "AstrBot @ git+https://github.com/AstrBotDevs/AstrBot.git@${{ matrix.astrbot }}"
+
+      # Verifies that main.py imports under data.plugins.<dir>.main, that the
+      # commands and wake-word listener land in AstrBot's own handler registry,
+      # that _conf_schema.json is accepted by the real AstrBotConfig, that
+      # metadata.yaml parses, and that AstrBot's media pipeline can consume the
+      # WAV this plugin writes.
+      # This job runs the loader tests on their own on purpose: the offline
+      # suite installs a fake ``astrbot`` into sys.modules, which would shadow
+      # the real package and make these checks meaningless.
+      - name: Run the real-AstrBot loader tests
+        run: pytest tests/test_real_astrbot_loader.py -v -s
